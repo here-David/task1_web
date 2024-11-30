@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Task 1 - Table Processing</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Table Display</title>
     <style>
         table {
             border-collapse: collapse;
@@ -15,51 +17,91 @@
         }
         th {
             background-color: #f2f2f2;
-            font-weight: bold;
         }
-        h2 {
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+        h1 {
             text-align: center;
         }
     </style>
 </head>
 <body>
-    <h2>Table 1 - Input Data</h2>
-    <table>
-        <tr>
-            <th>Index #</th>
-            <th>Value</th>
-        </tr>
-        <?php
-        // Read the CSV file
-        $file = fopen("Table_Input.csv", "r");
-        $data = [];
-        $headers = fgetcsv($file); // Read the header row
+    <div class="container">
+        <!-- Table 1 will be displayed here -->
+        <h1>Table 1: Data from CSV</h1>
+        <table id="table1">
+            <thead>
+                <tr>
+                    <th>Index #</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
 
-        while (($row = fgetcsv($file)) !== false) {
-            $data[$row[0]] = (int)$row[1];
-            echo "<tr><td>{$row[0]}</td><td>{$row[1]}</td></tr>";
-        }
-        fclose($file);
-        ?>
-    </table>
+        <!-- Table 2 will be displayed here -->
+        <h1>Table 2: Calculated Values</h1>
+        <table id="table2">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>Alpha</td><td id="alpha"></td></tr>
+                <tr><td>Beta</td><td id="beta"></td></tr>
+                <tr><td>Charlie</td><td id="charlie"></td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <h2>Table 2 - Processed Values</h2>
-    <table>
-        <tr>
-            <th>Category</th>
-            <th>Value</th>
-        </tr>
-        <?php
-        // Process calculations
-        $alpha = $data['A5'] + $data['A20'];
-        $beta = $data['A15'] / ($data['A7'] > 0 ? $data['A7'] : 1); // Avoid division by zero
-        $charlie = $data['A13'] * $data['A12'];
+    <script>
+        // Fetch the CSV file and parse it
+        fetch('Table_Input.csv') // Make sure your CSV file is correctly placed in your web app directory
+            .then(response => response.text())
+            .then(csvText => {
+                const rows = csvText.split('\n');
+                const table1Data = [];
+                
+                rows.forEach((row, index) => {
+                    if (index > 0) { // Skip the header row
+                        const columns = row.split(',');
+                        if (columns.length > 1) {
+                            table1Data.push({
+                                index: columns[0].trim(),
+                                value: columns[1].trim()
+                            });
+                        }
+                    }
+                });
 
-        // Display Table 2
-        echo "<tr><td>Alpha</td><td>{$alpha}</td></tr>";
-        echo "<tr><td>Beta</td><td>{$beta}</td></tr>";
-        echo "<tr><td>Charlie</td><td>{$charlie}</td></tr>";
-        ?>
-    </table>
+                // Populate Table 1 with data
+                const table1Body = document.querySelector("#table1 tbody");
+                table1Data.forEach(data => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `<td>${data.index}</td><td>${data.value}</td>`;
+                    table1Body.appendChild(row);
+                });
+
+                // Calculate Table 2 values based on the CSV data
+                const A5 = parseInt(table1Data.find(item => item.index === "A5").value);
+                const A20 = parseInt(table1Data.find(item => item.index === "A20").value);
+                const A15 = parseInt(table1Data.find(item => item.index === "A15").value);
+                const A7 = parseInt(table1Data.find(item => item.index === "A7").value);
+                const A13 = parseInt(table1Data.find(item => item.index === "A13").value);
+                const A12 = parseInt(table1Data.find(item => item.index === "A12").value);
+
+                // Calculate and update Table 2 values
+                document.getElementById("alpha").textContent = A5 + A20;
+                document.getElementById("beta").textContent = (A15 / A7); // Division result
+                document.getElementById("charlie").textContent = A13 * A12;
+            })
+            .catch(error => console.error('Error loading CSV file:', error));
+    </script>
 </body>
 </html>
